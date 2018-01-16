@@ -85,13 +85,23 @@ public class Matrix {
     public static void para_mult(float c[][], float a[][], float b[][]){
         for(int i = 0; i < num_thread; i++){
                 WorkThread wt = new WorkThread(c, a, b, i);
-                wt.start();
+                Thread thread = new Thread(wt);
+                thread.start();
+                try{
+                    thread.join();
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
         }
-    }
+    } 
 
-    public static class WorkThread implements Runnable{
+}
+
+class WorkThread implements Runnable{
         float c[][], a[][], b[][];
         int tid;
+            static final double SEC = Math.pow(10, 9);
+
         WorkThread(float c[][], float a[][], float b[][], int tid){
             this.c = c;
             this.a = a;
@@ -106,18 +116,25 @@ public class Matrix {
             int mat_size = n;
             int start = tid * mat_size / 4;
             int end = (tid + 1) * mat_size / 4;
-
-            for(int i = start; i < end; i++){
-                for(int j = 0;j < p;j++){
-                    for(int k = 0;k < n;k++){
+            // System.out.println("start is " + start + 
+            // "end is " + end);
+            long ikj_start_time = System.nanoTime();
+            for (int i = start; i < end; i++) {
+                for(int k = 0; k < n; k++) {
+                    //C[i][j] = 0;
+                    for(int j = 0; j < p; j++){
                         c[i][j] += a[i][k] * b[k][j];
                     }
                 }
-            }
+            } 
+            long ikl_end_time = System.nanoTime();
+            System.out.println("The tid is " + tid + 
+            "\ttime is " + (double)(ikl_end_time - ikj_start_time)/SEC +
+            "\tStart is " + (double)ikj_start_time/SEC +
+            "\tEnd is " + (double)ikl_end_time/SEC);
+
         }
     }
-
-}
 //public class Matrix {
 //    public static float[][] rand_matrix(int rows, int cols) {
 //        Random rand = new Random();
